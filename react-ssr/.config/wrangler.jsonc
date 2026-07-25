@@ -1,0 +1,29 @@
+/**
+ * Cloudflare Workers config. See:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "react-ssr",
+  "compatibility_date": "2025-09-02",
+  // `nodejs_compat` gives the Worker a Node-shaped runtime — notably `process`
+  // and `process.env`, which the session code reads for its secret. With this
+  // compatibility date, `vars` and secrets are also surfaced on `process.env`.
+  "compatibility_flags": ["nodejs_compat"],
+  // TanStack Start's server entry. The build (via the vite plugin) emits the
+  // worker bundle that Wrangler deploys.
+  "main": "@tanstack/react-start/server-entry",
+  "observability": {
+    "enabled": true,
+  },
+
+  /**
+   * Secrets — set for local dev in `.dev.vars` (see `.dev.vars.example`), and in
+   * production with `wrangler secret put <NAME>`:
+   *   - SESSION_SECRET  random string (>= 32 chars) that signs the session cookie
+   *   - APP_PASSWORD    the shared password the demo login checks against
+   *
+   * Add bindings (D1, KV, R2, ...) here as you grow, then run `pnpm cf-typegen`
+   * to regenerate `worker-configuration.d.ts` with their types.
+   */
+}
