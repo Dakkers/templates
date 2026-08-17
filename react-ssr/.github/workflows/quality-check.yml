@@ -33,3 +33,105 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+  build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [development, staging, production]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (${{ matrix.mode }})
+        run: pnpm build --mode ${{ matrix.mode }}
+
+  smoke-test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # `expected_env` is the VITE_APP_ENV value in the matching
+          # `.config/.env.<mode>` file — the assertion below proves the build
+          # actually loaded that file and inlined the value.
+          - mode: development
+            expected_env: development
+          - mode: staging
+            expected_env: staging
+          - mode: production
+            expected_env: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (${{ matrix.mode }})
+        run: pnpm build --mode ${{ matrix.mode }}
+
+      # `vite preview` runs the built worker bundle inside workerd (via the
+      # Cloudflare plugin), so this exercises the same runtime that gets
+      # deployed — not a Node stand-in.
+      - name: Start server (${{ matrix.mode }})
+        run: |
+          pnpm exec vite preview --config .config/vite.config.ts \
+            --mode ${{ matrix.mode }} --port 4173 > preview.log 2>&1 &
+          echo "$!" > preview.pid
+          for _ in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:4173/ && exit 0
+            sleep 1
+          done
+          echo "::error::server never became ready on :4173"
+          cat preview.log
+          exit 1
+
+      - name: Smoke test SSR response
+        run: |
+          set -euo pipefail
+          html=$(curl -sfS --max-time 30 http://localhost:4173/)
+
+          # Server-rendered markup, not an empty hydration shell: the landing
+          # page's <h1> only exists in the HTML if SSR actually ran.
+          if ! grep -aq '<h1[^>]*>React SSR Template' <<<"$html"; then
+            echo "::error::SSR'd markup missing from the response"
+            printf '%s\n' "$html" | head -40
+            exit 1
+          fi
+
+          # Env injection: `__root.tsx` renders VITE_APP_ENV into a meta tag,
+          # and Vite inlines it at build time from `.config/.env.<mode>`.
+          actual=$(grep -ao '<meta name="app-env" content="[^"]*"' <<<"$html" \
+            | head -1 | sed 's/.*content="//')
+          if [ "$actual" != "${{ matrix.expected_env }}" ]; then
+            echo "::error::VITE_APP_ENV was '$actual', expected '${{ matrix.expected_env }}'"
+            exit 1
+          fi
+          echo "SSR OK — VITE_APP_ENV=$actual"
+
+      - name: Stop server
+        if: always()
+        run: kill "$(cat preview.pid)" 2>/dev/null || true
+
+      - name: Server logs
+        if: failure()
+        run: cat preview.log
