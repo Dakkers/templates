@@ -14,6 +14,7 @@
     "generate-routes": "tsr generate",
     "cf-typegen": "wrangler types --config .config/wrangler.jsonc",
     "typecheck": "tsc --noEmit",
+    "test:smoke": "vitest run --config .config/vitest.config.ts",
     "fmt": "oxfmt --config .config/.oxfmtrc.json . '!src/routeTree.gen.ts'",
     "fmt:check": "oxfmt --config .config/.oxfmtrc.json --check . '!src/routeTree.gen.ts'",
     "lint": "oxlint --config .config/.oxlintrc.json --fix",
@@ -50,6 +51,7 @@
     "oxlint": "1.64.0",
     "typescript": "6.0.3",
     "vite": "8.1.4",
+    "vitest": "4.1.10",
     "wrangler": "4.110.0"
   },
   "packageManager": "pnpm@11.1.2"
