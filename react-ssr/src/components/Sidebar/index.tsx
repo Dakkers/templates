@@ -1,14 +1,9 @@
 import { Link as RouterLink, useRouterState } from "@tanstack/react-router";
 import { Divider, Flex } from "@saintly-software/baritone";
-import {
-  LayoutDashboard as DashboardIcon,
-  LogOut as LogOutIcon,
-} from "lucide-react";
+import { LayoutDashboard as DashboardIcon, LogOut as LogOutIcon } from "lucide-react";
 import { navLink, sidebar } from "./styles.css";
 
-const NAV_ITEMS = [
-  { to: "/dashboard", label: "Dashboard", icon: DashboardIcon },
-] as const;
+const NAV_ITEMS = [{ to: "/dashboard", label: "Dashboard", icon: DashboardIcon }] as const;
 
 function SidebarItem({
   to,

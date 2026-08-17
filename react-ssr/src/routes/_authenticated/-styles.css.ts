@@ -1,6 +1,6 @@
 import { navbarHeight } from "#/styles/vars.css";
 import { style } from "@vanilla-extract/css";
-import { calc } from '@vanilla-extract/css-utils';
+import { calc } from "@vanilla-extract/css-utils";
 
 export const shell = style({
   minHeight: "100vh",
@@ -9,7 +9,7 @@ export const shell = style({
 export const shellBody = style({
   display: "flex",
   alignItems: "flex-start",
-  minHeight: calc.subtract('100vh', navbarHeight)
+  minHeight: calc.subtract("100vh", navbarHeight),
 });
 
 export const shellMain = style({
