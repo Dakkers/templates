@@ -1,0 +1,18 @@
+name: Setup
+description: Install pnpm and Node, then install dependencies from the lockfile.
+
+runs:
+  using: composite
+  steps:
+    # Reads `packageManager` from package.json, so the pnpm version stays
+    # pinned in one place rather than here.
+    - uses: pnpm/action-setup@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
