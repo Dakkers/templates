@@ -15,6 +15,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: APP_NAME },
+      // Which `.config/.env.*` file the bundle was built against, inlined by
+      // Vite at build time. Non-secret by definition (it's a `VITE_`-prefixed
+      // var, so it ships to the client either way), and the CI smoke test reads
+      // it back out of the SSR'd HTML to prove the right mode was loaded.
+      { name: "app-env", content: import.meta.env.VITE_APP_ENV },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },

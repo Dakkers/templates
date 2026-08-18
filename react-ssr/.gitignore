@@ -40,6 +40,8 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+# Claude Code keeps checkouts of other branches here — never commit or format them.
+.claude/worktrees/
 *.swp
 *.swo
 

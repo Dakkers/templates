@@ -15,15 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Format check
         run: pnpm fmt:check
@@ -33,3 +25,50 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+  # Kept separate from quality-check so a red check tells you *what* broke:
+  # style/types, unit logic, or the app not building/serving.
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      - name: Unit tests
+        run: pnpm test
+
+  build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [development, staging, production]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      - name: Build (${{ matrix.mode }})
+        run: pnpm build --mode ${{ matrix.mode }}
+
+  smoke-test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [development, staging, production]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      # The suite builds in this mode and boots a preview server itself (see
+      # tests/smoke/globalSetup.ts), so this is the same single command you run
+      # locally — no CI-only server plumbing to keep in sync.
+      - name: Smoke test (${{ matrix.mode }})
+        run: pnpm test:smoke
+        env:
+          SMOKE_MODE: ${{ matrix.mode }}

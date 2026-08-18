@@ -1,0 +1,40 @@
+name: Setup
+description: Install pnpm and Node, then install dependencies from the lockfile.
+
+runs:
+  using: composite
+  steps:
+    # Reads `packageManager` from package.json, so the pnpm version stays
+    # pinned in one place rather than here.
+    - uses: pnpm/action-setup@v4
+
+    # `cache: pnpm` caches the global pnpm *store* (the content-addressed
+    # tarball cache), keyed on the lockfile. That's the first layer: on a hit,
+    # `pnpm install` needs no network, but still has to relink node_modules.
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+
+    # Second layer: node_modules itself, so an unchanged lockfile skips the
+    # install entirely. pnpm's node_modules is a symlink farm pointing into
+    # `node_modules/.pnpm`, and every link is relative and self-contained, so
+    # the directory restores intact.
+    #
+    # The key covers everything that changes the resolved tree: the lockfile,
+    # the Node version, and pnpm-workspace.yaml (which holds this project's
+    # install settings, not a workspace definition). No `restore-keys` — a
+    # partial-match restore would leave a node_modules that doesn't match the
+    # lockfile, and the install is then skipped, so a stale tree would go
+    # unnoticed. Better to miss and reinstall.
+    - name: Restore node_modules
+      id: node-modules-cache
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', '.nvmrc', 'pnpm-workspace.yaml') }}
+
+    - name: Install dependencies
+      if: steps.node-modules-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm install --frozen-lockfile

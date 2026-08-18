@@ -9,7 +9,7 @@ export const sidebar = style({
   boxSizing: "border-box",
   position: "sticky",
   top: navbarHeight,
-  height: calc.subtract('100vh', navbarHeight)
+  height: calc.subtract("100vh", navbarHeight),
 });
 
 export const navLink = style({

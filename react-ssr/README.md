@@ -44,11 +44,16 @@ That serves the app at http://localhost:3000. The demo login password is
 │   ├── components/        # UI building blocks
 │   ├── router.tsx         # router + SSR-query integration
 │   └── styles/            # reset + Baritone's CSS, and the app-shell tokens (theme.css.ts)
+├── tests/
+│   ├── unit/              # fast in-process tests (`pnpm test`)
+│   └── smoke/             # builds the app, boots it, drives it over HTTP
 ├── public/                # static assets served as-is
-├── .github/workflows/     # CI: quality-check (fmt/lint/typecheck) + PR-title lint
+├── .github/workflows/     # CI: quality-check, unit-test, build, smoke-test + PR-title lint
+├── .github/actions/setup/ # composite action: pnpm + Node + cached install
 ├── .changeset/            # changeset files + config (versioning / changelog)
 ├── .config/               # tool config, kept out of the root
 │   ├── vite.config.ts     # Vite + TanStack Start + Cloudflare plugins
+│   ├── vitest.config.ts   # both test suites, as vitest projects
 │   ├── wrangler.jsonc     # Cloudflare Workers config
 │   ├── .oxlintrc.json     # oxlint rules
 │   ├── .oxfmtrc.json      # oxfmt options
@@ -76,6 +81,9 @@ from the project root.
 | `pnpm generate-routes`   | Regenerate `src/routeTree.gen.ts` by hand                 |
 | `pnpm cf-typegen`        | Regenerate `worker-configuration.d.ts` from bindings      |
 | `pnpm typecheck`         | `tsc --noEmit`                                            |
+| `pnpm test` / `:watch`   | Unit tests (vitest, in-process)                           |
+| `pnpm test:smoke`        | Build + boot the app, then assert it really serves SSR    |
+| `pnpm test:all`          | Both suites in one run                                    |
 | `pnpm lint` / `:check`   | `oxlint` (with/without `--fix`)                           |
 | `pnpm fmt` / `:check`    | `oxfmt` (write/check)                                     |
 | `pnpm changeset`         | Record a change (writes a markdown file to `.changeset/`) |
@@ -235,6 +243,23 @@ This template ships no persistence on purpose. To add
 ## CI
 
 [`.github/workflows/quality-check.yml`](.github/workflows/quality-check.yml) runs
-`fmt:check`, `lint:check`, and `typecheck` on every push to `main` and every PR.
+`fmt:check`, `lint:check`, `typecheck` and the unit tests on every push to `main`
+and every PR. On PRs it additionally builds every mode (`development`,
+`staging`, `production`) and runs the smoke suite against each — the jobs are
+split so a red check names what broke rather than just "CI failed". All of them
+share [`.github/actions/setup`](.github/actions/setup/action.yml), which installs
+pnpm + Node and caches both the pnpm store and `node_modules`.
+
+### Tests
+
+The two suites are Vitest [projects](https://vitest.dev/guide/projects) in a
+single [.config/vitest.config.ts](.config/vitest.config.ts), selected with
+`--project`. `pnpm test` is the unit one: pure logic, no build, runs in a
+fraction of a second. `pnpm test:smoke` is the slower one — it builds the app in `SMOKE_MODE`
+(default `production`), boots the built Worker under `vite preview`, and asserts
+over real HTTP that the page is server-rendered and that the right
+`.config/.env.*` file was baked in. Point it at another mode with
+`SMOKE_MODE=staging pnpm test:smoke`.
+
 [`pr-title.yml`](.github/workflows/pr-title.yml) enforces
 [Conventional Commits](https://www.conventionalcommits.org/) on PR titles.

@@ -29,11 +29,9 @@ function DashboardPage() {
           {items.map((item) => (
             <Card key={item.id} saliency="low">
               <Flex align="center" justify="between" gap="3">
-                <Flex align="center" gap="2" minWidth='0'>
+                <Flex align="center" gap="2" minWidth="0">
                   {item.done && <CheckIcon size={16} aria-label="Done" />}
-                  <Text>
-                    {item.title}
-                  </Text>
+                  <Text>{item.title}</Text>
                 </Flex>
                 <Text variant="sm" saliency="low">
                   {item.done ? "Done" : "Open"}

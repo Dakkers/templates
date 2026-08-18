@@ -1,3 +1,7 @@
 {
-  "$schema": "../node_modules/oxfmt/configuration_schema.json"
+  "$schema": "../node_modules/oxfmt/configuration_schema.json",
+  // Scratch/tooling directories that hold checkouts or generated copies of the
+  // source — formatting them is meaningless and makes `fmt:check` fail on files
+  // that aren't part of this working tree.
+  "ignorePatterns": [".claude/**", ".dummy/**"]
 }
