@@ -14,7 +14,7 @@ export function NotFound() {
       gap="3"
       style={{ minHeight: "100vh", textAlign: "center" }}
     >
-      <Heading level={1} variant="2xl">
+      <Heading level={1} size="2xl">
         Page not found
       </Heading>
       <Text saliency="low">That URL doesn't match any route.</Text>
