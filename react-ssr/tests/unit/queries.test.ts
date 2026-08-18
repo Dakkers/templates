@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { q } from "#/lib/queries";
+import { q } from "#/data/queries";
 
 /**
  * The query-options factory exists so a route loader's `ensureQueryData` and a

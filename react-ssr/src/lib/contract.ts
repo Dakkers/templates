@@ -7,15 +7,18 @@
  *
  *     import { contract } from "@your-org/api-contract";
  *
- * then re-point the import in `./client` at it. The contract is the single
+ * then re-point the import in `#/data/client` at it. The contract is the single
  * source of truth shared by both sides: the API server builds its handlers from
  * it, and this frontend derives a fully-typed client from it. As long as the
  * published `contract` is an oRPC contract router of the same shape, nothing
- * else under `src/lib/orpc` has to change.
+ * else has to change.
+ *
+ * It lives in `lib/` (not `data/`) because it's a stand-in for a third-party
+ * package — the repo-specific wiring built on top of it lives in `#/data`.
  *
  * It's modelled REST-first: every procedure declares an HTTP `method` + `path`
- * via `.route()`, which is what lets `OpenAPILink` (in `./client`) turn a call
- * like `client.items.find({ id })` into `GET /items/{id}` against your REST API.
+ * via `.route()`, which is what lets `OpenAPILink` (in `#/data/client`) turn a
+ * call like `client.items.find({ id })` into `GET /items/{id}` against your API.
  */
 import { oc } from "@orpc/contract";
 import { z } from "zod";

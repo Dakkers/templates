@@ -4,13 +4,13 @@
  * `ensureQueryData(q.items())` on the server and a component can
  * `useSuspenseQuery(q.items())` on the client and hit the same cache entry.
  *
- * The fetchers are the typed oRPC client (`#/lib/orpc/client`) talking to the
+ * The fetchers are the typed oRPC client (`#/data/client`) talking to the
  * upstream REST API. `api.items.list.queryOptions()` already returns a
  * `queryOptions` object; this thin `q` facade just gives the app one stable
  * import surface, so changing the transport underneath never ripples out into
  * every route that reads data.
  */
-import { api } from "#/lib/orpc/client";
+import { api } from "#/data/client";
 
 export const q = {
   items: () => api.items.list.queryOptions(),

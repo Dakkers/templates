@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Card, Flex, Grid, Text } from "@saintly-software/baritone";
 import { Page } from "#/components/Page";
-import { q } from "#/lib/queries";
+import { q } from "#/data/queries";
 import { Check as CheckIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({

@@ -5,7 +5,7 @@
  *    from mutations, server functions, or anywhere outside a query.
  *  - `api` — TanStack Query utils built from it: `api.items.list.queryOptions()`,
  *    which drop straight into route loaders and `useSuspenseQuery` (this is what
- *    `#/lib/queries` re-exports).
+ *    `#/data/queries` re-exports).
  *
  * The module is isomorphic — the same code runs during SSR (inside the Worker)
  * and in the browser — with the two environment-specific concerns handled below:
@@ -16,7 +16,7 @@ import type { ContractRouterClient } from "@orpc/contract";
 import type { JsonifiedClient } from "@orpc/openapi-client";
 import { OpenAPILink } from "@orpc/openapi-client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import { contract } from "./contract";
+import { contract } from "#/lib/contract";
 
 // `JsonifiedClient` reflects that responses have made a round-trip through JSON
 // over HTTP — e.g. a contract `z.date()` comes back as a string, not a `Date`.

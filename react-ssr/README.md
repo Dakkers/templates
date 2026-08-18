@@ -41,9 +41,11 @@ That serves the app at http://localhost:3000. The demo login password is
 ├── src/
 │   ├── routes/            # file-based routes (the tree is generated → routeTree.gen.ts)
 │   ├── server/            # server functions (auth/session) — run only on the server
-│   ├── lib/               # shared helpers
-│   │   ├── orpc/          #   typed oRPC client for the upstream REST API
+│   ├── data/              # data layer: oRPC client + query-options factory
+│   │   ├── client.ts      #   typed oRPC client for the upstream REST API
 │   │   └── queries.ts     #   query-options factory (the loader ↔ component seam)
+│   ├── lib/               # shared helpers
+│   │   └── contract.ts    #   API contract stub (stand-in for a published package)
 │   ├── components/        # UI building blocks
 │   ├── router.tsx         # router + SSR-query integration
 │   └── styles/            # reset + Baritone's CSS, and the app-shell tokens (theme.css.ts)
@@ -174,7 +176,7 @@ wrangler secret put APP_PASSWORD
 
 ## Data fetching
 
-[`src/lib/queries.ts`](src/lib/queries.ts) centralises `queryOptions` so a route
+[`src/data/queries.ts`](src/data/queries.ts) centralises `queryOptions` so a route
 loader and a component share one cache entry:
 
 ```ts
@@ -184,9 +186,9 @@ loader: ({ context }) => context.queryClient.ensureQueryData(q.items()), // serv
 const { data } = useSuspenseQuery(q.items())                            // reads cache
 ```
 
-The fetchers are the typed **oRPC client** ([`src/lib/orpc/`](src/lib/orpc/)),
-which calls an upstream REST API — so the same `q.items()` runs on the server
-during the loader and on the client after hydration, hitting one cache entry.
+The fetchers are the typed **oRPC client** ([`src/data/`](src/data/)), which calls
+an upstream REST API — so the same `q.items()` runs on the server during the
+loader and on the client after hydration, hitting one cache entry.
 See [Talking to the API](#talking-to-the-api-orpc) for how the client is wired.
 
 ## Talking to the API (oRPC)
@@ -197,28 +199,30 @@ each procedure to an HTTP method + path — is the single source of truth shared
 the API server and this frontend. This template assumes the API **publishes that
 contract as a package**, so the client re-types itself the moment the API changes.
 
-Three small files under [`src/lib/orpc/`](src/lib/orpc/):
+Three small files, split by ownership — the repo-specific wiring lives in
+[`src/data/`](src/data/); the contract stub sits in [`src/lib/`](src/lib/)
+because it stands in for a third-party package:
 
-- **[`contract.ts`](src/lib/orpc/contract.ts)** — a stand-in contract so the
+- **[`src/lib/contract.ts`](src/lib/contract.ts)** — a stand-in contract so the
   template builds and runs out of the box. **Delete it in a real project** and
   import the contract from the API's published package instead:
 
   ```ts
-  // src/lib/orpc/client.ts
-  import { contract } from "@your-org/api-contract"; // ← was "./contract"
+  // src/data/client.ts
+  import { contract } from "@your-org/api-contract"; // ← was "#/lib/contract"
   ```
 
   Because the API is REST, `OpenAPILink` reads the `{ method, path }` on each
   procedure and turns a call like `apiClient.items.find({ id })` into
   `GET /items/{id}`.
 
-- **[`client.ts`](src/lib/orpc/client.ts)** — builds the client from the contract
-  and exports two things:
+- **[`src/data/client.ts`](src/data/client.ts)** — builds the client from the
+  contract and exports two things:
   - `apiClient` — a plain promise client (`await apiClient.items.list()`) for
     mutations or one-off calls.
   - `api` — TanStack Query utils (`api.items.list.queryOptions()`) that slot into
-    loaders and `useSuspenseQuery`. [`src/lib/queries.ts`](src/lib/queries.ts) is
-    a thin facade over these.
+    loaders and `useSuspenseQuery`. [`src/data/queries.ts`](src/data/queries.ts)
+    is a thin facade over these.
 
   The module is **isomorphic** — one build runs both in the Worker (SSR) and the
   browser — so it handles two environment-specific concerns:
