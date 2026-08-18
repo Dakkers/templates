@@ -1,0 +1,17 @@
+# Local Worker runtime secrets — copy to `.config/.dev.vars` and fill in.
+#
+# Wrangler loads `.dev.vars` from next to its config file (hence `.config/`) for
+# `vite dev` and `vite preview`, and surfaces these on `process.env` under
+# `nodejs_compat`. `.dev.vars` is gitignored; this `.example` is committed. In
+# production, set the same names with `wrangler secret put <NAME>`.
+
+# Signs the session cookie. Use >= 32 random characters.
+SESSION_SECRET=
+
+# The shared password the demo login checks against.
+APP_PASSWORD=
+
+# Optional: private origin the SERVER uses to reach the REST API during SSR
+# (e.g. an internal service URL). Falls back to VITE_API_URL when unset; the
+# browser always uses VITE_API_URL. See src/lib/orpc/client.ts.
+API_URL=

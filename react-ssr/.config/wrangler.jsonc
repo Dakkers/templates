@@ -22,6 +22,9 @@
    * production with `wrangler secret put <NAME>`:
    *   - SESSION_SECRET  random string (>= 32 chars) that signs the session cookie
    *   - APP_PASSWORD    the shared password the demo login checks against
+   *   - API_URL         optional private origin the server uses to reach the REST
+   *                     API during SSR (the browser uses VITE_API_URL). See
+   *                     src/lib/orpc/client.ts.
    *
    * Add bindings (D1, KV, R2, ...) here as you grow, then run `pnpm cf-typegen`
    * to regenerate `worker-configuration.d.ts` with their types.

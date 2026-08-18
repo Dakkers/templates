@@ -14,6 +14,7 @@ and CI wired up from the start.
 | ----------------- | -------------------------------------------------------- |
 | Framework / SSR   | TanStack Start + TanStack Router (file-based)            |
 | Runtime / hosting | Cloudflare Workers (`@cloudflare/vite-plugin`, Wrangler) |
+| API client        | oRPC (contract-first, REST via `OpenAPILink`)            |
 | Data fetching     | TanStack Query, hydrated through the SSR stream          |
 | Design system     | `@saintly-software/baritone` (+ `@base-ui/react`)        |
 | Icons             | `lucide-react`                                           |
@@ -39,8 +40,12 @@ That serves the app at http://localhost:3000. The demo login password is
 .
 ├── src/
 │   ├── routes/            # file-based routes (the tree is generated → routeTree.gen.ts)
-│   ├── server/            # server functions (auth, data) — run only on the server
-│   ├── lib/               # shared client helpers (query options)
+│   ├── server/            # server functions (auth/session) — run only on the server
+│   ├── data/              # data layer: oRPC client + query-options factory
+│   │   ├── client.ts      #   typed oRPC client for the upstream REST API
+│   │   └── queries.ts     #   query-options factory (the loader ↔ component seam)
+│   ├── lib/               # shared helpers
+│   │   └── contract.ts    #   API contract stub (stand-in for a published package)
 │   ├── components/        # UI building blocks
 │   ├── router.tsx         # router + SSR-query integration
 │   └── styles/            # reset + Baritone's CSS, and the app-shell tokens (theme.css.ts)
@@ -171,7 +176,7 @@ wrangler secret put APP_PASSWORD
 
 ## Data fetching
 
-[`src/lib/queries.ts`](src/lib/queries.ts) centralises `queryOptions` so a route
+[`src/data/queries.ts`](src/data/queries.ts) centralises `queryOptions` so a route
 loader and a component share one cache entry:
 
 ```ts
@@ -181,10 +186,62 @@ loader: ({ context }) => context.queryClient.ensureQueryData(q.items()), // serv
 const { data } = useSuspenseQuery(q.items())                            // reads cache
 ```
 
-The fetchers are TanStack Start **server functions**
-([`src/server/items.ts`](src/server/items.ts)) — they run only on the server. Today
-they return an in-memory list; replace it with a real data layer (see below) and
-keep the `requireAuth()` guard.
+The fetchers are the typed **oRPC client** ([`src/data/`](src/data/)), which calls
+an upstream REST API — so the same `q.items()` runs on the server during the
+loader and on the client after hydration, hitting one cache entry.
+See [Talking to the API](#talking-to-the-api-orpc) for how the client is wired.
+
+## Talking to the API (oRPC)
+
+Domain data comes from a separate REST API, consumed **contract-first** with
+[oRPC](https://orpc.unnoq.com/). The contract — an oRPC contract router that maps
+each procedure to an HTTP method + path — is the single source of truth shared by
+the API server and this frontend. This template assumes the API **publishes that
+contract as a package**, so the client re-types itself the moment the API changes.
+
+Three small files, split by ownership — the repo-specific wiring lives in
+[`src/data/`](src/data/); the contract stub sits in [`src/lib/`](src/lib/)
+because it stands in for a third-party package:
+
+- **[`src/lib/contract.ts`](src/lib/contract.ts)** — a stand-in contract so the
+  template builds and runs out of the box. **Delete it in a real project** and
+  import the contract from the API's published package instead:
+
+  ```ts
+  // src/data/client.ts
+  import { contract } from "@your-org/api-contract"; // ← was "#/lib/contract"
+  ```
+
+  Because the API is REST, `OpenAPILink` reads the `{ method, path }` on each
+  procedure and turns a call like `apiClient.items.find({ id })` into
+  `GET /items/{id}`.
+
+- **[`src/data/client.ts`](src/data/client.ts)** — builds the client from the
+  contract and exports two things:
+  - `apiClient` — a plain promise client (`await apiClient.items.list()`) for
+    mutations or one-off calls.
+  - `api` — TanStack Query utils (`api.items.list.queryOptions()`) that slot into
+    loaders and `useSuspenseQuery`. [`src/data/queries.ts`](src/data/queries.ts)
+    is a thin facade over these.
+
+  The module is **isomorphic** — one build runs both in the Worker (SSR) and the
+  browser — so it handles two environment-specific concerns:
+  - **Base URL.** The browser uses `VITE_API_URL` (inlined at build time); the
+    server may override it with a private origin via `API_URL`.
+  - **Auth.** Auth is a cookie shared with the API. In the browser it rides along
+    via `credentials: "include"`; during SSR there's no cookie jar, so the client
+    forwards the incoming request's `Cookie` header. (The forwarding code is
+    server-only and is tree-shaken out of the client bundle by an
+    `import.meta.env.SSR` guard.)
+
+Point the client at your API with `VITE_API_URL` (per mode in
+[`.config/.env.*`](.config/)) and, optionally, a server-side `API_URL`
+([`.config/.dev.vars.example`](.config/.dev.vars.example)). Cross-origin browser
+calls need the API to send `Access-Control-Allow-Credentials: true` with a
+specific (non-`*`) `Access-Control-Allow-Origin`.
+
+> Auth to _this app_ (the login gate) stays a cookie-session server function —
+> see [Auth model](#auth-model). oRPC is only for the external data API.
 
 ## Baritone
 
@@ -230,8 +287,9 @@ redirect is only found when Wrangler runs from the project root.
 
 ## Adding a database
 
-This template ships no persistence on purpose. To add
-[Cloudflare D1](https://developers.cloudflare.com/d1/):
+Domain data lives behind the [oRPC API](#talking-to-the-api-orpc), so the Worker
+itself ships no persistence. If you also need Worker-local storage (caching,
+sessions, small lookups), add [Cloudflare D1](https://developers.cloudflare.com/d1/):
 
 1. Add a `d1_databases` binding in `.config/wrangler.jsonc`.
 2. Run `pnpm cf-typegen` to regenerate `worker-configuration.d.ts` with the
