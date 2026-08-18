@@ -53,8 +53,7 @@ That serves the app at http://localhost:3000. The demo login password is
 ├── .changeset/            # changeset files + config (versioning / changelog)
 ├── .config/               # tool config, kept out of the root
 │   ├── vite.config.ts     # Vite + TanStack Start + Cloudflare plugins
-│   ├── vitest.unit.config.ts   # unit suite
-│   ├── vitest.smoke.config.ts  # smoke suite (builds + serves the app)
+│   ├── vitest.config.ts   # both test suites, as vitest projects
 │   ├── wrangler.jsonc     # Cloudflare Workers config
 │   ├── .oxlintrc.json     # oxlint rules
 │   ├── .oxfmtrc.json      # oxfmt options
@@ -84,6 +83,7 @@ from the project root.
 | `pnpm typecheck`         | `tsc --noEmit`                                            |
 | `pnpm test` / `:watch`   | Unit tests (vitest, in-process)                           |
 | `pnpm test:smoke`        | Build + boot the app, then assert it really serves SSR    |
+| `pnpm test:all`          | Both suites in one run                                    |
 | `pnpm lint` / `:check`   | `oxlint` (with/without `--fix`)                           |
 | `pnpm fmt` / `:check`    | `oxfmt` (write/check)                                     |
 | `pnpm changeset`         | Record a change (writes a markdown file to `.changeset/`) |
@@ -252,8 +252,10 @@ pnpm + Node and caches both the pnpm store and `node_modules`.
 
 ### Tests
 
-`pnpm test` is the unit suite: pure logic, no build, runs in a fraction of a
-second. `pnpm test:smoke` is the slower one — it builds the app in `SMOKE_MODE`
+The two suites are Vitest [projects](https://vitest.dev/guide/projects) in a
+single [.config/vitest.config.ts](.config/vitest.config.ts), selected with
+`--project`. `pnpm test` is the unit one: pure logic, no build, runs in a
+fraction of a second. `pnpm test:smoke` is the slower one — it builds the app in `SMOKE_MODE`
 (default `production`), boots the built Worker under `vite preview`, and asserts
 over real HTTP that the page is server-rendered and that the right
 `.config/.env.*` file was baked in. Point it at another mode with
