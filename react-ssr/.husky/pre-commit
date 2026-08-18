@@ -1,0 +1,5 @@
+# Mirror the CI "quality check" job so commits fail locally for the same
+# reasons they'd fail in CI. oxfmt/oxlint are fast; tsc is the slow-ish one.
+pnpm fmt:check
+pnpm lint:check
+pnpm typecheck
