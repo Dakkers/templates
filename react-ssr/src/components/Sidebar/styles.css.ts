@@ -20,8 +20,8 @@ export const navLink = style({
   borderRadius: vars.radius.md,
   textDecoration: "none",
   color: vars.text.color.neutral.mid,
-  fontSize: vars.text.variant.body.sm.fontSize,
-  lineHeight: vars.text.variant.body.sm.lineHeight,
+  fontSize: vars.text.size.sm.fontSize,
+  lineHeight: vars.text.size.sm.lineHeight,
 
   ":hover": {
     background: vars.surface.color.neutral.high.default.bgc,

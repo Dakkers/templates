@@ -1,8 +1,9 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
-import { BaritoneTheme, buildDefaultTokens } from "@saintly-software/baritone";
+import { BaritoneProvider, BaritoneTheme, buildDefaultTokens } from "@saintly-software/baritone";
 
 import { NotFound } from "../components/NotFound";
+import { toastManager } from "../lib/toast";
 import resetCss from "../styles/reset.css?url";
 import appCss from "../styles/styles.css?url";
 import { bodyStyle } from "#/styles/root.css";
@@ -41,7 +42,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
 
       <BaritoneTheme tokens={tokens} scheme="light" render={<body className={bodyStyle} />}>
-        {children}
+        {/* BaritoneProvider owns the client-side toast system (Toast.Provider +
+            viewport). It lives inside BaritoneTheme so the body-mounted viewport
+            resolves its tokens from the theme class on <body>. The shared
+            `toastManager` lets non-React code — the global mutation-error handler
+            in `#/router` — fire toasts through this same viewport. */}
+        <BaritoneProvider toastManager={toastManager}>{children}</BaritoneProvider>
 
         <Scripts />
       </BaritoneTheme>

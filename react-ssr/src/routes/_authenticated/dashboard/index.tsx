@@ -33,7 +33,7 @@ function DashboardPage() {
                   {item.done && <CheckIcon size={16} aria-label="Done" />}
                   <Text>{item.title}</Text>
                 </Flex>
-                <Text variant="sm" saliency="low">
+                <Text size="sm" saliency="low">
                   {item.done ? "Done" : "Open"}
                 </Text>
               </Flex>

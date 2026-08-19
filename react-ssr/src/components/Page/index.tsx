@@ -30,11 +30,11 @@ export function Page({ title, subtitle, actions, children }: PageProps) {
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <Heading level={1} variant="2xl">
+          <Heading level={1} size="2xl">
             {title}
           </Heading>
           {subtitle != null && (
-            <Text variant="sm" saliency="low">
+            <Text size="sm" saliency="low">
               {subtitle}
             </Text>
           )}

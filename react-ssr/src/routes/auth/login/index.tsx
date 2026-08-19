@@ -49,15 +49,15 @@ function LoginPage() {
         <Flex render={<form onSubmit={submit} />} direction="column" gap="4">
           <Flex align="center" gap="2">
             <LogoIcon size={22} aria-hidden />
-            <Heading level={1} variant="lg">
+            <Heading level={1} size="lg">
               React SSR Template
             </Heading>
           </Flex>
           <Flex direction="column" gap="1">
-            <Heading level={2} variant="xl">
+            <Heading level={2} size="xl">
               Welcome back
             </Heading>
-            <Text variant="sm" saliency="low">
+            <Text size="sm" saliency="low">
               Enter the password to continue. The demo default is <strong>password</strong>.
             </Text>
           </Flex>
@@ -65,7 +65,7 @@ function LoginPage() {
             label="Password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(value) => setPassword(value)}
             state={failed ? "invalid" : "neutral"}
             helpText={failed ? "That password didn't match." : undefined}
             autoFocus

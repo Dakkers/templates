@@ -12,10 +12,10 @@ function LandingPage() {
     >
       <Flex direction="column" align="center" gap="6">
         <Flex direction="column" align="center" gap="4">
-          <Heading level={1} variant="4xl">
+          <Heading level={1} size="4xl">
             React SSR Template
           </Heading>
-          <Text variant="lg" saliency="low">
+          <Text size="lg" saliency="low">
             TanStack Start on Cloudflare Workers, with the Baritone design system, TanStack Query,
             and a cookie-session auth gate — ready to build on.
           </Text>
@@ -37,7 +37,7 @@ function LandingPage() {
           </Link>
         </Flex>
 
-        <Text variant="sm" saliency="low">
+        <Text size="sm" saliency="low">
           The demo password is <strong>password</strong> (set <code>APP_PASSWORD</code> to change
           it).
         </Text>

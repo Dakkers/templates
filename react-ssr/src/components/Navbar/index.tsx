@@ -12,7 +12,7 @@ export function Navbar() {
     <Flex render={<header />} align="center" gap="3" px="6" className={navbar}>
       <RouterLink to="/dashboard" className={brandLink}>
         <LogoIcon size={22} aria-hidden />
-        <Heading level={1} variant="lg">
+        <Heading level={1} size="lg">
           React SSR
         </Heading>
       </RouterLink>
